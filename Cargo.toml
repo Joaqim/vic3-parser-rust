@@ -2,7 +2,7 @@
 authors = ["Joaqim Planstedt <mail@joaqim.xyz>"]
 edition = "2021"
 name = "vic3-parser"
-description = "A simple Rust project using Nix"
+description = "A simple Victoria 3 definitions parser"
 version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
