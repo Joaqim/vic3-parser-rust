@@ -71,23 +71,9 @@ fn parse_any_token_in_array<'source>(
 
         Some(Ok(Token::BraceClose)) => Ok(ArrayParseResult::EndArray(Value::String(token_value))),
 
-        Some(Ok(Token::String(s))) => Ok(ArrayParseResult::Multiple(vec![
+        Some(Ok(token)) => Ok(ArrayParseResult::Multiple(vec![
             Value::String(token_value),
-            Value::String(s),
-        ])),
-
-        Some(Ok(Token::Any(s))) => Ok(ArrayParseResult::Multiple(vec![
-            Value::String(token_value),
-            Value::String(s),
-        ])),
-
-        Some(Ok(Token::Float(n))) => Ok(ArrayParseResult::Multiple(vec![
-            Value::String(token_value),
-            Value::Float(n),
-        ])),
-        Some(Ok(Token::Integer(n))) => Ok(ArrayParseResult::Multiple(vec![
-            Value::String(token_value),
-            Value::Integer(n),
+            parse_simple_value(token)?,
         ])),
 
         _ => Err((
