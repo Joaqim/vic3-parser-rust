@@ -1,3 +1,5 @@
+global_variable = 30
+
 SCOPE_1 = {
     array = { "value1" "value2" value3 }
     number_array = { 1 2 3 }
