@@ -6,8 +6,8 @@ use crate::{token::Token, value::Value, Result};
 
 use std::collections::HashMap;
 
-pub fn parse_program(source: &String) -> Result<Value> {
-    let mut lexer = Token::lexer(source.as_str());
+pub fn parse_program(source: &str) -> Result<Value> {
+    let mut lexer = Token::lexer(source);
 
     let program = parse_object_contents(&mut lexer)?;
 

@@ -1,7 +1,7 @@
 use crate::{token::Token, value::Value, Result};
 use logos::Span;
 
-pub fn parse_simple_value<'source>(token: Token<'source>) -> Result<Value<'source>> {
+pub fn parse_simple_value(token: Token<'_>) -> Result<Value<'_>> {
     match token {
         Token::Bool(b) => Ok(Value::Bool(b)),
         Token::Null => Ok(Value::Null),
