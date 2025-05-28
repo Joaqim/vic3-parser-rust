@@ -17,4 +17,5 @@ SCOPE_1 = {
     implied_string = world    
     integer_var = 100
     float_var = 100.0
+    boolean_var = true
 }

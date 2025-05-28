@@ -4,8 +4,8 @@ use logos::Logos;
 #[derive(Debug, Logos, PartialEq)]
 #[logos(skip r"[ \t\r\n\f]+")]
 pub enum Token<'source> {
-    #[token("false", |_| false, priority = 1)]
-    #[token("true", |_| true, priority = 1)]
+    #[token("false", |_| false, priority = 4)]
+    #[token("true", |_| true, priority = 4)]
     Bool(bool),
 
     #[token("{", priority = 1)]

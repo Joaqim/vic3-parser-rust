@@ -13,6 +13,7 @@ pub fn parse_next_value<'source>(
         Some(Ok(Token::Float(n))) => Ok(Value::Float(n)),
         Some(Ok(Token::Integer(n))) => Ok(Value::Integer(n)),
         Some(Ok(Token::Any(s))) => Ok(Value::String(s)),
+        Some(Ok(Token::Bool(b))) => Ok(Value::Bool(b)),
         Some(Ok(Token::BraceOpen)) => parse_array(lexer),
         Some(Ok(Token::BraceClose)) => {
             // This handles the edge case in your original code
