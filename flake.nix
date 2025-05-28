@@ -14,13 +14,13 @@
   };
 
   outputs = inputs:
-    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+    inputs.flake-parts.lib.mkFlake {inherit inputs;} {
       systems = import inputs.systems;
 
       # See ./nix/*.nix for the modules that are imported here.
       imports = with builtins;
         map
-          (fn: ./nix/${fn})
-          (attrNames (readDir ./nix));
+        (fn: ./nix/${fn})
+        (attrNames (readDir ./nix));
     };
 }
