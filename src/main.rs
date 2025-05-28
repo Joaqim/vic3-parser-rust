@@ -1,5 +1,5 @@
 use clap::Parser;
-use logos::Logos;
+use parse_program::parse_program;
 use std::fs;
 
 pub type Error = (String, logos::Span);
@@ -11,11 +11,8 @@ mod value;
 
 mod parse_array;
 mod parse_next_value;
-mod parse_scope;
+mod parse_program;
 mod parse_simple_value;
-
-use crate::parse_scope::parse_scope;
-use crate::token::Token;
 
 #[derive(Parser, Debug)]
 #[clap(author = "Joaqim Planstedt", version, about)]
@@ -33,9 +30,7 @@ fn main() {
     let filename = args.file.expect("Expected file argument");
     let src = fs::read_to_string(&filename).expect("Failed to read file");
 
-    let mut lexer = Token::lexer(src.as_str());
-
-    match parse_scope(&mut lexer) {
+    match parse_program(&src) {
         Ok(value) => {
             if args.ast {
                 println!("{:#?}", value);

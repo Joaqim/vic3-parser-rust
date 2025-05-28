@@ -13,6 +13,8 @@ pub fn parse_array<'source>(lexer: &mut Lexer<'source, Token<'source>>) -> Resul
     while let Some(token) = lexer.next() {
         match token {
             Ok(Token::BraceClose) => {
+                // Turns array into Value::Object if any element is an object
+                // Will fail if array also contains non-objects
                 return if array.iter().any(|value| matches!(value, Value::Object(_))) {
                     flatten_array(array)
                 } else {
