@@ -81,9 +81,13 @@ fn parse_any_token_in_array<'source>(
             Value::String(s),
         ])),
 
-        Some(Ok(Token::Number(n))) => Ok(ArrayParseResult::Multiple(vec![
+        Some(Ok(Token::Float(n))) => Ok(ArrayParseResult::Multiple(vec![
             Value::String(token_value),
-            Value::Number(n),
+            Value::Float(n),
+        ])),
+        Some(Ok(Token::Integer(n))) => Ok(ArrayParseResult::Multiple(vec![
+            Value::String(token_value),
+            Value::Integer(n),
         ])),
 
         _ => Err((

@@ -7,7 +7,9 @@ pub enum Value<'source> {
     /// true or false.
     Bool(bool),
     /// Any floating point number.
-    Number(f64),
+    Float(f64),
+    // And non floating point number
+    Integer(i64),
     /// Any quoted string.
     String(&'source str),
     /// An array of values
@@ -26,7 +28,8 @@ impl serde::Serialize for Value<'_> {
     {
         match self {
             Value::String(s) => serializer.serialize_str(s),
-            Value::Number(n) => serializer.serialize_f64(*n),
+            Value::Float(n) => serializer.serialize_f64(*n),
+            Value::Integer(n) => serializer.serialize_i64(*n),
             Value::Array(arr) => arr.serialize(serializer),
             Value::Object(obj) => obj.serialize(serializer),
             Value::Bool(b) => serializer.serialize_bool(*b),

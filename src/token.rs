@@ -20,8 +20,11 @@ pub enum Token<'source> {
     #[token("null", priority = 1)]
     Null,
 
-    #[regex(r"-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?", |lex| lex.slice().parse::<f64>().unwrap(), priority = 3)]
-    Number(f64),
+    #[regex(r"-?(?:0|[1-9]\d*)(?:\.\d+)(?:[eE][+-]?\d+)?", |lex| lex.slice().parse::<f64>().unwrap(), priority = 3)]
+    Float(f64),
+
+    #[regex(r"-?(?:0|[0-9]\d*)", |lex| lex.slice().parse::<i64>().unwrap(), priority = 2)]
+    Integer(i64),
 
     #[regex(r#""([^"\\\x00-\x1F]|\\(["\\bnfrt/]|u[a-fA-F0-9]{4}))*""#, |lex| lex.slice().trim_matches('"'), priority = 3)]
     String(&'source str),

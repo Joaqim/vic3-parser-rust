@@ -5,7 +5,8 @@ pub fn parse_simple_value<'source>(token: Token<'source>) -> Result<Value<'sourc
     match token {
         Token::Bool(b) => Ok(Value::Bool(b)),
         Token::Null => Ok(Value::Null),
-        Token::Number(n) => Ok(Value::Number(n)),
+        Token::Float(n) => Ok(Value::Float(n)),
+        Token::Integer(n) => Ok(Value::Integer(n)),
         Token::String(s) => Ok(Value::String(s)),
         Token::Any(s) => Ok(Value::String(s)),
         _ => Err((

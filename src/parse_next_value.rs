@@ -10,7 +10,8 @@ pub fn parse_next_value<'source>(
 ) -> Result<Value<'source>> {
     match lexer.next() {
         Some(Ok(Token::String(s))) => Ok(Value::String(s)),
-        Some(Ok(Token::Number(n))) => Ok(Value::Number(n)),
+        Some(Ok(Token::Float(n))) => Ok(Value::Float(n)),
+        Some(Ok(Token::Integer(n))) => Ok(Value::Integer(n)),
         Some(Ok(Token::Any(s))) => Ok(Value::String(s)),
         Some(Ok(Token::BraceOpen)) => parse_array(lexer),
         Some(Ok(Token::BraceClose)) => {
