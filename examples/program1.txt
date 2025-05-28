@@ -1,0 +1,14 @@
+SCOPE_1 = {
+    array = { "value1" "value2" value3 }
+    number_array = { 1 2 3 }
+    object = {
+        var_str = "string value"
+        var_int = 123
+        var_mixed_nest_array = { 1 "test1" test2 4 5 6 } 
+    }
+    color = "#ff0000"
+    number = 10
+    string_literal = "hello"
+    implied_string = world    
+    number_as_last_var = 100
+}
