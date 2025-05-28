@@ -22,11 +22,14 @@ fn parse_object_contents<'source>(
 
     while let Some(token) = lexer.next() {
         match token {
-            Ok(Token::BraceClose) if current_key.is_some() => {
-                return Err((
-                    "unexpected '}', expected value after key".to_owned(),
-                    lexer.span(),
-                ));
+            Ok(Token::BraceClose) => {
+                if current_key.is_some() {
+                    return Err((
+                        "unexpected '}', expected '=' followed by value after key".to_owned(),
+                        lexer.span(),
+                    ));
+                }
+                return Ok(Value::Object(map));
             }
 
             Ok(Token::Any(key)) if current_key.is_none() => {
@@ -41,7 +44,8 @@ fn parse_object_contents<'source>(
             _ => {
                 return Err((
                     format!(
-                        "unexpected token in object context, current_key: {:?}",
+                        "unexpected token '{:?}' in object context, current_key: {:?}",
+                        token.unwrap(),
                         current_key
                     ),
                     lexer.span(),
@@ -51,4 +55,67 @@ fn parse_object_contents<'source>(
     }
 
     Ok(Value::Object(map))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::token::Token;
+
+    #[test]
+    fn test_parse_empty_object() {
+        let mut lexer = Token::lexer("}");
+        let result = parse_object_contents(&mut lexer);
+        assert!(result.is_ok());
+        assert!(matches!(result.unwrap(), Value::Object(_)));
+    }
+
+    #[test]
+    fn test_parse_single_key_value_pair() {
+        let mut lexer = Token::lexer("key = value }");
+        let result = parse_object_contents(&mut lexer);
+        assert!(result.is_ok(), "{}", result.unwrap_err().0);
+        // TODO Assert object keys and values
+    }
+
+    #[test]
+    fn test_parse_multiple_key_value_pairs() {
+        let mut lexer = Token::lexer("key1 = value1 key2 = value2 }");
+        let result = parse_object_contents(&mut lexer);
+        assert!(result.is_ok(), "{}", result.unwrap_err().0);
+        // TODO: Assert object keys and values
+    }
+
+    #[test]
+    fn test_parse_key_without_value() {
+        let mut lexer = Token::lexer("key }");
+        let result = parse_object_contents(&mut lexer);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(
+            err.0,
+            "unexpected '}', expected '=' followed by value after key"
+        );
+    }
+
+    #[test]
+    fn test_parse_unexpected_token() {
+        let mut lexer = Token::lexer("123 }");
+        let result = parse_object_contents(&mut lexer);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(
+            err.0,
+            "unexpected token 'Integer(123)' in object context, current_key: None"
+        );
+    }
+
+    #[test]
+    fn test_parse_missing_value_after_key() {
+        let mut lexer = Token::lexer(" key = }");
+        let result = parse_object_contents(&mut lexer);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.0, "unexpected '}' when expecting value");
+    }
 }
