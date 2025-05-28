@@ -2,52 +2,77 @@
 
 ### Input:
 ```
+global_variable = 30
+
 SCOPE_1 = {
     array = { "value1" "value2" value3 }
-    number_array = { 1 2 3 }
+    integer_array = { 1 2 3 }
+    float_array = { 1.2 3.4 }
+    number_array = { 1.234 4 0.0 }
     object = {
         var_str = "string value"
         var_int = 123
-        var_mixed_nest_array = { 1 "test1" test2 4 5 6 } 
+        var_mixed_nest_array = { 1 "test1" test2 4 5 6 7.5 } 
     }
     color = "#ff0000"
+    hex_color_array = { x00ff00 "xff0000" "x0000ff" }
     number = 10
     string_literal = "hello"
     implied_string = world    
-    number_as_last_var = 100
+    integer_var = 100
+    float_var = 100.0
+    boolean_var = true
 }
 ```
 ### Output:
 ```json
 {
+  "global_variable": 30,
   "SCOPE_1": {
-    "color": "#ff0000",
-    "string_literal": "hello",
+    "integer_array": [
+      1,
+      2,
+      3
+    ],
+    "implied_string": "world",
     "array": [
       "value1",
       "value2",
       "value3"
     ],
+    "integer_var": 100,
     "number_array": [
-      1.0,
-      2.0,
-      3.0
+      1.234,
+      4,
+      0.0
     ],
+    "color": "#ff0000",
+    "hex_color_array": [
+      "x00ff00",
+      "xff0000",
+      "x0000ff"
+    ],
+    "float_var": 100.0,
+    "string_literal": "hello",
     "object": {
+      "var_int": 123,
+      "var_str": "string value",
       "var_mixed_nest_array": [
-        1.0,
+        1,
         "test1",
         "test2",
-        4.0,
-        5.0,
-        6.0
-      ],
-      "var_int": 123.0,
-      "var_str": "string value"
+        4,
+        5,
+        6,
+        7.5
+      ]
     },
-    "number_as_last_var": 100.0,
-    "implied_string": "world",
-    "number": 10.0
+    "float_array": [
+      1.2,
+      3.4
+    ],
+    "boolean_var": true,
+    "number": 10
   }
 }
 ```
