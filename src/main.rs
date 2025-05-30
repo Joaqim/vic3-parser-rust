@@ -25,6 +25,7 @@ struct Args {
     #[arg()]
     file: Option<String>,
 }
+
 fn main() {
     let args = Args::parse();
     let filename = args.file.expect("Expected file argument");
@@ -58,8 +59,8 @@ fn main() {
                         .with_color(a),
                 )
                 .finish()
-                .eprint((&filename, Source::from(src)))
+                .eprint((&filename, Source::from(&src)))
                 .unwrap();
         }
-    }
+    };
 }

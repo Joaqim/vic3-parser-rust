@@ -1,4 +1,5 @@
 use logos::{Lexer, Span};
+use ordered_hash_map::OrderedHashMap;
 
 use crate::parse_next_value::parse_next_value;
 use crate::parse_simple_value::parse_simple_value;
@@ -70,10 +71,9 @@ fn parse_any_token_in_array<'source>(
     match lexer.next() {
         Some(Ok(Token::EqualSign)) => {
             let value = parse_next_value(lexer)?;
-            Ok(ArrayParseResult::Single(Value::Object(Vec::from([(
-                token_value,
-                value,
-            )]))))
+            Ok(ArrayParseResult::Single(Value::Object(
+                OrderedHashMap::from_iter(vec![(token_value, value)].into_iter()),
+            )))
         }
 
         Some(Ok(Token::BraceClose)) => Ok(ArrayParseResult::EndArray(Value::String(token_value))),
@@ -91,11 +91,11 @@ fn parse_any_token_in_array<'source>(
 }
 /// Flatten an array of objects into a single object
 fn flatten_array(objects: Vec<Value>) -> Result<Value> {
-    let mut flattened = Vec::new();
+    let mut ordered_map: OrderedHashMap<&str, Value<'_>> = OrderedHashMap::new();
 
     for object in objects {
         match object {
-            Value::Object(mut obj) => flattened.append(&mut obj),
+            Value::Object(obj) => ordered_map.extend(obj),
             _ => {
                 return Err((
                     "array containing object is mixed with non-object value".into(),
@@ -104,8 +104,7 @@ fn flatten_array(objects: Vec<Value>) -> Result<Value> {
             }
         }
     }
-
-    Ok(Value::Object(flattened))
+    Ok(Value::Object(ordered_map))
 }
 
 #[cfg(test)]
@@ -184,26 +183,29 @@ mod tests {
 
     #[test]
     fn test_flatten_array_single_object() {
-        let mut object = Vec::new();
-        object.push(("key", Value::String("value")));
-        let array = vec![Value::Object(object)];
-        let result = flatten_array(array);
+        let mut ordered_map = OrderedHashMap::new();
+        ordered_map.insert("key", Value::String("value"));
+        let object = vec![Value::Object(ordered_map)];
+        let result = flatten_array(object);
         assert!(result.is_ok());
         let object = match result.unwrap() {
             Value::Object(obj) => obj,
             _ => panic!(),
         };
         assert_eq!(object.len(), 1);
-        assert_eq!(object, vec![("key", Value::String("value"))]);
+        assert_eq!(
+            object,
+            OrderedHashMap::from_iter(vec![("key", Value::String("value"))].into_iter())
+        );
     }
 
     #[test]
     fn test_flatten_array_multiple_objects() {
-        let mut object1 = Vec::new();
-        object1.push(("key1", Value::String("value1")));
-        let mut object2 = Vec::new();
-        object2.push(("key2", Value::String("value2")));
-        let array = vec![Value::Object(object1), Value::Object(object2)];
+        let mut ordered_map1 = OrderedHashMap::new();
+        ordered_map1.insert("key1", Value::String("value1"));
+        let mut ordered_map2 = OrderedHashMap::new();
+        ordered_map2.insert("key2", Value::String("value2"));
+        let array = vec![Value::Object(ordered_map1), Value::Object(ordered_map2)];
         let result = flatten_array(array);
         assert!(result.is_ok());
         let object = match result.unwrap() {
@@ -213,26 +215,31 @@ mod tests {
         assert_eq!(object.len(), 2);
         assert_eq!(
             object,
-            vec![
-                ("key1", Value::String("value1")),
-                ("key2", Value::String("value2"))
-            ]
+            OrderedHashMap::from_iter(
+                vec![
+                    ("key1", Value::String("value1")),
+                    ("key2", Value::String("value2"))
+                ]
+                .into_iter()
+            )
         );
     }
 
     #[test]
-    fn test_flatten_array_mixed_values() {
-        let mut object = Vec::new();
-        object.push(("key", Value::String("value")));
-        let array = vec![Value::Object(object), Value::String("non-object")];
-        let result = flatten_array(array);
-        assert!(result.is_err());
-    }
-
-    #[test]
     fn test_flatten_array_non_object_values() {
-        let array = vec![Value::String("non-object"), Value::Integer(42)];
+        let mut array = vec![Value::String("non-object"), Value::Integer(42)];
+        let result = flatten_array(array.clone());
+        assert!(result.is_err());
+        array.push(Value::Object(OrderedHashMap::from_iter(
+            vec![("key", Value::String("value"))].into_iter(),
+        )));
         let result = flatten_array(array);
         assert!(result.is_err());
+
+        let array = vec![Value::Object(OrderedHashMap::from_iter(
+            vec![("key", Value::String("value"))].into_iter(),
+        ))];
+        let result = flatten_array(array);
+        assert!(result.is_ok());
     }
 }
