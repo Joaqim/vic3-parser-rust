@@ -25,13 +25,13 @@ struct Args {
     #[arg()]
     file: Option<String>,
 }
+
 fn main() {
     let args = Args::parse();
     let filename = args.file.expect("Expected file argument");
     let src = fs::read_to_string(&filename).expect("Failed to read file");
 
-    // TODO: Shouldn't need to clone here when using lifetime
-    match parse_program(&src.clone()) {
+    match parse_program(&src) {
         Ok(value) => {
             if args.ast {
                 println!("{:#?}", value);
@@ -59,8 +59,8 @@ fn main() {
                         .with_color(a),
                 )
                 .finish()
-                .eprint((&filename, Source::from(src)))
+                .eprint((&filename, Source::from(&src)))
                 .unwrap();
         }
-    }
+    };
 }
