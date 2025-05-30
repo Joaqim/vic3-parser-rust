@@ -8,7 +8,7 @@ use crate::{token::Token, value::Value, Result};
 pub fn parse_program<'source>(source: &'source str) -> Result<Value<'source>> {
     let mut lexer = Token::<'source>::lexer(source);
 
-    Ok(parse_variables(&mut lexer)?)
+    parse_variables(&mut lexer)
 }
 
 pub fn parse_variables<'source>(

@@ -72,7 +72,7 @@ fn parse_any_token_in_array<'source>(
         Some(Ok(Token::EqualSign)) => {
             let value = parse_next_value(lexer)?;
             Ok(ArrayParseResult::Single(Value::Object(
-                OrderedHashMap::from_iter(vec![(token_value, value)].into_iter()),
+                OrderedHashMap::from_iter(vec![(token_value, value)]),
             )))
         }
 
@@ -230,9 +230,10 @@ mod tests {
         let mut array = vec![Value::String("non-object"), Value::Integer(42)];
         let result = flatten_array(array.clone());
         assert!(result.is_err());
-        array.push(Value::Object(OrderedHashMap::from_iter(
-            vec![("key", Value::String("value"))].into_iter(),
-        )));
+        array.push(Value::Object(OrderedHashMap::from_iter(vec![(
+            "key",
+            Value::String("value"),
+        )])));
         let result = flatten_array(array);
         assert!(result.is_err());
 
