@@ -41,6 +41,8 @@ fn parse_object_contents<'source>(
                 let value = parse_next_value(lexer)?;
                 map.insert(key, value);
             }
+            Ok(Token::Comment1) => (),
+            Err(_) => todo!(),
             _ => {
                 return Err((
                     format!(

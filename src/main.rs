@@ -35,6 +35,7 @@ fn main() {
             if args.ast {
                 println!("{:#?}", value);
             } else {
+                // TODO: Handle serialization errors
                 println!("{}", serde_json::to_string_pretty(&value).unwrap());
             }
         }
@@ -46,7 +47,7 @@ fn main() {
             let a = colors.next();
 
             Report::build(ReportKind::Error, (&filename, 12..12))
-                .with_message("Invalid JSON".to_string())
+                .with_message("Failed to parse Input".to_string())
                 .with_label(
                     Label::new((&filename, span))
                         .with_message(msg)
