@@ -25,9 +25,8 @@ pub fn parse_array<'source>(lexer: &mut Lexer<'source, Token<'source>>) -> Resul
                 // Will fail if array also contains non-objects
                 if array.iter().any(|value| matches!(value, Value::Object(_))) {
                     return flatten_array(array);
-                } else {
-                    return Ok(Value::Array(array));
-                };
+                }
+                return Ok(Value::Array(array));
             }
 
             Ok(Token::BraceOpen) => {

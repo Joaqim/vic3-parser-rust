@@ -35,8 +35,12 @@ fn main() {
             if args.ast {
                 println!("{:#?}", value);
             } else {
-                // TODO: Handle serialization errors
-                println!("{}", serde_json::to_string_pretty(&value).unwrap());
+                match serde_json::to_string_pretty(&value) {
+                    Ok(val) => println!("{}", val),
+                    Err(err) => {
+                        eprintln!("Failed to serialize: {}", err);
+                    }
+                }
             }
         }
         Err((msg, span)) => {
