@@ -3,7 +3,7 @@ use logos::Logos;
 /* ANCHOR: tokens */
 #[derive(Debug, Logos, PartialEq)]
 // Simple one-liner comments
-#[logos(skip r"[#|(//)].*\n")]
+#[logos(skip r"#.*\n")]
 // Zero-width space character: https://unicodeplus.com/U+FEFF
 #[logos(skip r"[ ﻿\t\r\n\f]+")]
 pub enum Token<'source> {
