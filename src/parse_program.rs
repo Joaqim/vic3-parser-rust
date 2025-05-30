@@ -4,8 +4,6 @@ use crate::parse_next_value::parse_next_value;
 
 use crate::{token::Token, value::Value, Result};
 
-use std::collections::HashMap;
-
 pub fn parse_program(source: &str) -> Result<Value> {
     let mut lexer = Token::lexer(source);
 
@@ -17,7 +15,7 @@ pub fn parse_program(source: &str) -> Result<Value> {
 fn parse_object_contents<'source>(
     lexer: &mut Lexer<'source, Token<'source>>,
 ) -> Result<Value<'source>> {
-    let mut map = HashMap::new();
+    let mut variables: Vec<(&str, Value)> = Vec::new();
     let mut current_key: Option<&str> = None;
 
     while let Some(token) = lexer.next() {
@@ -29,7 +27,7 @@ fn parse_object_contents<'source>(
                         lexer.span(),
                     ));
                 }
-                return Ok(Value::Object(map));
+                return Ok(Value::Object(variables));
             }
 
             Ok(Token::Any(key)) if current_key.is_none() => {
@@ -39,7 +37,7 @@ fn parse_object_contents<'source>(
             Ok(Token::EqualSign) if current_key.is_some() => {
                 let key = current_key.take().unwrap();
                 let value = parse_next_value(lexer)?;
-                map.insert(key, value);
+                variables.push((key, value));
             }
             Ok(Token::Comment1) => (),
             Err(_) => todo!(),
@@ -56,7 +54,7 @@ fn parse_object_contents<'source>(
         }
     }
 
-    Ok(Value::Object(map))
+    Ok(Value::Object(variables))
 }
 
 #[cfg(test)]

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value<'source> {
@@ -14,8 +14,8 @@ pub enum Value<'source> {
     String(&'source str),
     /// An array of values
     Array(Vec<Value<'source>>),
-    /// An dictionary mapping keys and values.
-    Object(HashMap<&'source str, Value<'source>>),
+    /// An array of keys and values ( used to represent a dictionary )
+    Object(Vec<(&'source str, Value<'source>)>),
 }
 
 impl serde::Serialize for Value<'_> {
@@ -31,7 +31,14 @@ impl serde::Serialize for Value<'_> {
             Value::Float(n) => serializer.serialize_f64(*n),
             Value::Integer(n) => serializer.serialize_i64(*n),
             Value::Array(arr) => arr.serialize(serializer),
-            Value::Object(obj) => obj.serialize(serializer),
+            Value::Object(obj) => {
+                // Flatten array to array of objects into a single JSON object
+                let mut map = BTreeMap::new();
+                for (key, value) in obj {
+                    map.insert(key, value);
+                }
+                map.serialize(serializer)
+            }
             Value::Bool(b) => serializer.serialize_bool(*b),
             Value::Null => serializer.serialize_none(),
         }

@@ -4,8 +4,6 @@ use crate::parse_next_value::parse_next_value;
 use crate::parse_simple_value::parse_simple_value;
 use crate::{token::Token, value::Value, Result};
 
-use std::collections::HashMap;
-
 /// Parse a token stream into a Value::Array.
 ///
 /// Will flatten array and return a Value::Object if any element in the array is an object.
@@ -73,7 +71,7 @@ fn parse_any_token_in_array<'source>(
     match lexer.next() {
         Some(Ok(Token::EqualSign)) => {
             let value = parse_next_value(lexer)?;
-            Ok(ArrayParseResult::Single(Value::Object(HashMap::from([(
+            Ok(ArrayParseResult::Single(Value::Object(Vec::from([(
                 token_value,
                 value,
             )]))))
@@ -93,23 +91,22 @@ fn parse_any_token_in_array<'source>(
     }
 }
 /// Flatten an array of objects into a single object
-/// Returns an error if the array contains any non-object value
-fn flatten_array(array: Vec<Value>) -> Result<Value> {
-    let result: HashMap<&str, Value> =
-        array
-            .into_iter()
-            .try_fold(HashMap::new(), |mut acc, item| {
-                if let Value::Object(object) = item {
-                    acc.extend(object);
-                    Ok(acc)
-                } else {
-                    Err((
-                        "array containing object is mixed with non-object value".to_owned(),
-                        Span::default(),
-                    ))
-                }
-            })?;
-    Ok(Value::Object(result))
+fn flatten_array(objects: Vec<Value>) -> Result<Value> {
+    let mut flattened = Vec::new();
+
+    for object in objects {
+        match object {
+            Value::Object(mut obj) => flattened.append(&mut obj),
+            _ => {
+                return Err((
+                    "array containing object is mixed with non-object value".into(),
+                    Span::default(),
+                ))
+            }
+        }
+    }
+
+    Ok(Value::Object(flattened))
 }
 
 #[cfg(test)]
@@ -188,8 +185,8 @@ mod tests {
 
     #[test]
     fn test_flatten_array_single_object() {
-        let mut object = HashMap::new();
-        object.insert("key", Value::String("value"));
+        let mut object = Vec::new();
+        object.push(("key", Value::String("value")));
         let array = vec![Value::Object(object)];
         let result = flatten_array(array);
         assert!(result.is_ok());
@@ -198,15 +195,15 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(object.len(), 1);
-        assert_eq!(object.get("key").unwrap(), &Value::String("value"));
+        assert_eq!(object, vec![("key", Value::String("value"))]);
     }
 
     #[test]
     fn test_flatten_array_multiple_objects() {
-        let mut object1 = HashMap::new();
-        object1.insert("key1", Value::String("value1"));
-        let mut object2 = HashMap::new();
-        object2.insert("key2", Value::String("value2"));
+        let mut object1 = Vec::new();
+        object1.push(("key1", Value::String("value1")));
+        let mut object2 = Vec::new();
+        object2.push(("key2", Value::String("value2")));
         let array = vec![Value::Object(object1), Value::Object(object2)];
         let result = flatten_array(array);
         assert!(result.is_ok());
@@ -215,14 +212,19 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(object.len(), 2);
-        assert_eq!(object.get("key1").unwrap(), &Value::String("value1"));
-        assert_eq!(object.get("key2").unwrap(), &Value::String("value2"));
+        assert_eq!(
+            object,
+            vec![
+                ("key1", Value::String("value1")),
+                ("key2", Value::String("value2"))
+            ]
+        );
     }
 
     #[test]
     fn test_flatten_array_mixed_values() {
-        let mut object = HashMap::new();
-        object.insert("key", Value::String("value"));
+        let mut object = Vec::new();
+        object.push(("key", Value::String("value")));
         let array = vec![Value::Object(object), Value::String("non-object")];
         let result = flatten_array(array);
         assert!(result.is_err());
