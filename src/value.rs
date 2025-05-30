@@ -14,8 +14,8 @@ pub enum Value<'source> {
     String(&'source str),
     /// An array of values
     Array(Vec<Value<'source>>),
-    /// An array of keys and values ( used to represent a dictionary )
-    Object(Vec<(&'source str, Value<'source>)>),
+    /// An array of keys and values used to represent variable names and their values
+    Object(OrderedHashMap<&'source str, Value<'source>>),
 }
 
 impl serde::Serialize for Value<'_> {
@@ -31,13 +31,7 @@ impl serde::Serialize for Value<'_> {
             Value::Float(n) => serializer.serialize_f64(*n),
             Value::Integer(n) => serializer.serialize_i64(*n),
             Value::Array(arr) => arr.serialize(serializer),
-            Value::Object(obj) => {
-                // Flatten Value::Object to into a single JSON object { [key]: value, ... }
-                // Use of OrderedHashMap let's us retain insertion order
-                let ordered_map: OrderedHashMap<&str, &Value<'_>> =
-                    OrderedHashMap::from_iter(obj.iter().map(|(k, v)| (*k, v)));
-                ordered_map.serialize(serializer)
-            }
+            Value::Object(obj) => obj.serialize(serializer),
             Value::Bool(b) => serializer.serialize_bool(*b),
             Value::Null => serializer.serialize_none(),
         }

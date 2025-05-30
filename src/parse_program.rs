@@ -1,21 +1,20 @@
 use logos::{Lexer, Logos};
+use ordered_hash_map::OrderedHashMap;
 
 use crate::parse_next_value::parse_next_value;
 
 use crate::{token::Token, value::Value, Result};
 
-pub fn parse_program(source: &str) -> Result<Value> {
-    let mut lexer = Token::lexer(source);
+pub fn parse_program<'source>(source: &'source str) -> Result<Value<'source>> {
+    let mut lexer = Token::<'source>::lexer(source);
 
-    let program = parse_object_contents(&mut lexer)?;
-
-    Ok(program)
+    Ok(parse_variables(&mut lexer)?)
 }
 
-fn parse_object_contents<'source>(
+pub fn parse_variables<'source>(
     lexer: &mut Lexer<'source, Token<'source>>,
 ) -> Result<Value<'source>> {
-    let mut variables: Vec<(&str, Value)> = Vec::new();
+    let mut variables = OrderedHashMap::<&str, Value<'source>>::new();
     let mut current_key: Option<&str> = None;
 
     while let Some(token) = lexer.next() {
@@ -37,7 +36,7 @@ fn parse_object_contents<'source>(
             Ok(Token::EqualSign) if current_key.is_some() => {
                 let key = current_key.take().unwrap();
                 let value = parse_next_value(lexer)?;
-                variables.push((key, value));
+                variables.insert(key, value);
             }
             Err(_) => todo!(),
             _ => {
@@ -64,7 +63,7 @@ mod tests {
     #[test]
     fn test_parse_empty_object() {
         let mut lexer = Token::lexer("}");
-        let result = parse_object_contents(&mut lexer);
+        let result = parse_variables(&mut lexer);
         assert!(result.is_ok());
         assert!(matches!(result.unwrap(), Value::Object(_)));
     }
@@ -72,7 +71,7 @@ mod tests {
     #[test]
     fn test_parse_single_key_value_pair() {
         let mut lexer = Token::lexer("key = value }");
-        let result = parse_object_contents(&mut lexer);
+        let result = parse_variables(&mut lexer);
         assert!(result.is_ok(), "{}", result.unwrap_err().0);
         // TODO Assert object keys and values
     }
@@ -80,7 +79,7 @@ mod tests {
     #[test]
     fn test_parse_multiple_key_value_pairs() {
         let mut lexer = Token::lexer("key1 = value1 key2 = value2 }");
-        let result = parse_object_contents(&mut lexer);
+        let result = parse_variables(&mut lexer);
         assert!(result.is_ok(), "{}", result.unwrap_err().0);
         // TODO: Assert object keys and values
     }
@@ -88,7 +87,7 @@ mod tests {
     #[test]
     fn test_parse_key_without_value() {
         let mut lexer = Token::lexer("key }");
-        let result = parse_object_contents(&mut lexer);
+        let result = parse_variables(&mut lexer);
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(
@@ -100,7 +99,7 @@ mod tests {
     #[test]
     fn test_parse_unexpected_token() {
         let mut lexer = Token::lexer("123 }");
-        let result = parse_object_contents(&mut lexer);
+        let result = parse_variables(&mut lexer);
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(
@@ -112,7 +111,7 @@ mod tests {
     #[test]
     fn test_parse_missing_value_after_key() {
         let mut lexer = Token::lexer(" key = }");
-        let result = parse_object_contents(&mut lexer);
+        let result = parse_variables(&mut lexer);
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.0, "unexpected '}' when expecting value");

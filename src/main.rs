@@ -30,7 +30,8 @@ fn main() {
     let filename = args.file.expect("Expected file argument");
     let src = fs::read_to_string(&filename).expect("Failed to read file");
 
-    match parse_program(&src) {
+    // TODO: Shouldn't need to clone here when using lifetime
+    match parse_program(&src.clone()) {
         Ok(value) => {
             if args.ast {
                 println!("{:#?}", value);
