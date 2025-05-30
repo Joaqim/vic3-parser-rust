@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use ordered_hash_map::OrderedHashMap;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value<'source> {
@@ -32,12 +32,11 @@ impl serde::Serialize for Value<'_> {
             Value::Integer(n) => serializer.serialize_i64(*n),
             Value::Array(arr) => arr.serialize(serializer),
             Value::Object(obj) => {
-                // Flatten array to array of objects into a single JSON object
-                let mut map = BTreeMap::new();
-                for (key, value) in obj {
-                    map.insert(key, value);
-                }
-                map.serialize(serializer)
+                // Flatten Value::Object to into a single JSON object { [key]: value, ... }
+                // Use of OrderedHashMap let's us retain insertion order
+                let ordered_map: OrderedHashMap<&str, &Value<'_>> =
+                    OrderedHashMap::from_iter(obj.iter().map(|(k, v)| (*k, v)));
+                ordered_map.serialize(serializer)
             }
             Value::Bool(b) => serializer.serialize_bool(*b),
             Value::Null => serializer.serialize_none(),
