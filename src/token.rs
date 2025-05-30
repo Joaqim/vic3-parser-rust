@@ -2,7 +2,8 @@ use logos::Logos;
 
 /* ANCHOR: tokens */
 #[derive(Debug, Logos, PartialEq)]
-#[logos(skip r"[ \t\r\n\f]+")]
+// Zero-width space character: https://unicodeplus.com/U+FEFF
+#[logos(skip r"[ ﻿\t\r\n\f]+")]
 pub enum Token<'source> {
     #[token("false", |_| false, priority = 4)]
     #[token("true", |_| true, priority = 4)]
