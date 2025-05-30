@@ -1,5 +1,4 @@
 use clap::Parser;
-use parse_program::parse_program;
 use std::fs;
 
 pub type Error = (String, logos::Span);
@@ -13,6 +12,9 @@ mod parse_array;
 mod parse_next_value;
 mod parse_program;
 mod parse_simple_value;
+mod parse_variables;
+
+use parse_program::parse_program;
 
 #[derive(Parser, Debug)]
 #[clap(author = "Joaqim Planstedt", version, about)]
