@@ -2,6 +2,8 @@ use logos::Logos;
 
 /* ANCHOR: tokens */
 #[derive(Debug, Logos, PartialEq)]
+// Simple one-liner comments
+#[logos(skip r"[#|(//)].*\n")]
 // Zero-width space character: https://unicodeplus.com/U+FEFF
 #[logos(skip r"[ ﻿\t\r\n\f]+")]
 pub enum Token<'source> {
@@ -32,11 +34,4 @@ pub enum Token<'source> {
 
     #[regex(r"[A-Za-z][A-Za-z0-9_:]*", |lex| lex.slice(), priority = 0)]
     Any(&'source str),
-
-    #[logos(skip)]
-    #[regex(r"[#|(//)].*\n", priority = 1)]
-    Comment1,
-    #[logos(skip)]
-    #[regex(r"\/\*[^\*\/]*", priority = 2)]
-    Comment2,
 }

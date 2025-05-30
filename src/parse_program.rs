@@ -39,7 +39,6 @@ fn parse_object_contents<'source>(
                 let value = parse_next_value(lexer)?;
                 variables.push((key, value));
             }
-            Ok(Token::Comment1) => (),
             Err(_) => todo!(),
             _ => {
                 return Err((
