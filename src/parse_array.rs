@@ -5,57 +5,53 @@ use crate::parse_next_value::parse_next_value;
 use crate::parse_simple_value::parse_simple_value;
 use crate::{token::Token, value::Value, Result};
 
-/// Parse a token stream into a Value::Array.
+/// Parse a token stream into a `Value::Array`, `Value::Object` or `Value::Empty`.
 ///
-/// Will flatten array and return a Value::Object if any element in the array is an object.
-/// Will fail if array contains both simple values and objects
-///
+/// Flattens the array into a `Value::Object` if any element is an object.
+/// Fails if the array contains both simple values and objects.
 ///
 /// # Errors
 ///
-/// Will return an error if the token stream is exhausted before the array is closed.
-/// Will return an error if any value fails to be parsed
+/// Returns an error if the token stream is exhausted before the array is closed.
+/// Returns an error if any value fails to be parsed.
 pub fn parse_array<'source>(lexer: &mut Lexer<'source, Token<'source>>) -> Result<Value<'source>> {
-    let span = lexer.span();
-    let mut array = Vec::new();
+    let initial_span = lexer.span();
+    let mut elements = Vec::new();
 
     while let Some(token) = lexer.next() {
         match token {
             Ok(Token::BraceClose) => {
-                // Turns array into Value::Object if any element is an object
-                // Will fail if array also contains non-objects
-                if array.iter().any(|value| matches!(value, Value::Object(_))) {
-                    return flatten_array(array);
+                if elements.iter().any(|elem| matches!(elem, Value::Object(_))) {
+                    return flatten_array(elements);
                 }
-                return Ok(Value::Array(array));
+                if elements.is_empty() {
+                    return Ok(Value::Empty);
+                }
+                return Ok(Value::Array(elements));
             }
-
             Ok(Token::BraceOpen) => {
-                let sub_array = parse_array(lexer)?;
-                array.push(sub_array);
+                let nested_array = parse_array(lexer)?;
+                elements.push(nested_array);
             }
-
-            Ok(Token::Any(s)) => {
-                let value = parse_any_token_in_array(lexer, s)?;
-                match value {
-                    ArrayParseResult::Single(v) => array.push(v),
-                    ArrayParseResult::Multiple(mut values) => array.append(&mut values),
-                    ArrayParseResult::EndArray(v) => {
-                        array.push(v);
-                        return Ok(Value::Array(array));
+            Ok(Token::Any(identifier)) => {
+                let array_parse_result = parse_any_token_in_array(lexer, identifier)?;
+                match array_parse_result {
+                    ArrayParseResult::Single(value) => elements.push(value),
+                    ArrayParseResult::Multiple(mut values) => elements.append(&mut values),
+                    ArrayParseResult::EndArray(value) => {
+                        elements.push(value);
+                        return Ok(Value::Array(elements));
                     }
                 }
             }
-
             Ok(token) => {
-                array.push(parse_simple_value(token)?);
+                elements.push(parse_simple_value(token)?);
             }
-
-            _ => return Err(("failed to parse token in array ".to_owned(), lexer.span())),
+            _ => return Err(("Failed to parse token in array".to_owned(), lexer.span())),
         }
     }
 
-    Err(("unmatched opening bracket".to_owned(), span))
+    Err(("Unmatched opening bracket".to_owned(), initial_span))
 }
 
 enum ArrayParseResult<'source> {
@@ -91,6 +87,10 @@ fn parse_any_token_in_array<'source>(
 }
 /// Flatten an array of objects into a single object
 fn flatten_array(objects: Vec<Value>) -> Result<Value> {
+    if objects.is_empty() {
+        return Ok(Value::Empty);
+    }
+
     let mut ordered_map: OrderedHashMap<&str, Value<'_>> = OrderedHashMap::new();
 
     for object in objects {
@@ -117,11 +117,16 @@ mod tests {
         let mut lexer = Token::lexer("}");
         let result = parse_array(&mut lexer);
         assert!(result.is_ok());
-        let array = match result.unwrap() {
-            Value::Array(arr) => arr,
-            _ => panic!(),
-        };
-        assert!(array.is_empty());
+
+        matches!(result.unwrap(), Value::Empty);
+    }
+
+    #[test]
+    fn test_flatten_empty_array() {
+        let array = Vec::new();
+        let result = flatten_array(array);
+        assert!(result.is_ok());
+        matches!(result.unwrap(), Value::Empty);
     }
 
     #[test]
@@ -167,18 +172,6 @@ mod tests {
         assert!(matches!(array[3], Value::Integer(2)));
         assert!(matches!(array[4], Value::Float(3.4)));
         assert!(matches!(array[5], Value::String("test")));
-    }
-
-    #[test]
-    fn test_flatten_array_empty() {
-        let array = Vec::new();
-        let result = flatten_array(array);
-        assert!(result.is_ok());
-        let object = match result.unwrap() {
-            Value::Object(obj) => obj,
-            _ => panic!(),
-        };
-        assert!(object.is_empty());
     }
 
     #[test]

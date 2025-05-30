@@ -8,7 +8,7 @@ pub enum Value<'source> {
     Bool(bool),
     /// Any floating point number.
     Float(f64),
-    // And non floating point number
+    /// Any valid integer
     Integer(i64),
     /// Any quoted string.
     String(&'source str),
@@ -16,6 +16,10 @@ pub enum Value<'source> {
     Array(Vec<Value<'source>>),
     /// An array of keys and values used to represent variable names and their values
     Object(OrderedHashMap<&'source str, Value<'source>>),
+    /// Since {} can be either an empty Array or an Empty Object, we can use a specific type that covers either case
+    /// When serializing empty array/object to JSON, it will default to an empty array: []
+    /// Explicit Empty value type is mostly useful when using AST output
+    Empty,
 }
 
 impl serde::Serialize for Value<'_> {
@@ -34,6 +38,7 @@ impl serde::Serialize for Value<'_> {
             Value::Object(obj) => obj.serialize(serializer),
             Value::Bool(b) => serializer.serialize_bool(*b),
             Value::Null => serializer.serialize_none(),
+            Value::Empty => Vec::<serde_json::Value>::new().serialize(serializer),
         }
     }
 }
